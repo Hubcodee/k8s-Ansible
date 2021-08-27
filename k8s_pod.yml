@@ -1,0 +1,5 @@
+- name: Deploy application
+  hosts: tag_Name_k8s_master1
+  become: yes
+  roles: 
+    - k8s-deployment

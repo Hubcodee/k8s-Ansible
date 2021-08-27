@@ -1,0 +1,20 @@
+---
+# tasks file for k8s_worker
+- name: "setting up network configs"
+  copy:
+   dest: /etc/sysctl.d/
+   src: k8s.conf
+
+- name: "Applying configs" 
+  shell: "sysctl --system"
+
+- name: Copying token file to worker nodes
+  copy: src=/tmp/token dest=jointoken
+
+- name: "Joining the nodes"
+  shell: "cat jointoken > out.sh"
+
+- name: Connecting to master node...
+  shell: "sh out.sh"
+  ignore_errors: yes
+

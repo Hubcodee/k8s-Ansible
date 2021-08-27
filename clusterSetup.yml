@@ -1,0 +1,14 @@
+- hosts: tag_Service_k8s_master,tag_Service_k8s_worker
+  become: true
+  roles:
+    - role: "common_configs"
+
+- hosts: tag_Service_k8s_master
+  become: true
+  roles:
+    - role: "k8s_master"
+
+- hosts: tag_Service_k8s_worker
+  become: true
+  roles:
+    - role: "k8s_worker"

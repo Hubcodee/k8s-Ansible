@@ -1,0 +1,69 @@
+---
+# tasks file for aws_setup
+- include_vars: cred.yml
+- name: Creating security group for k8s cluster
+  ec2_group:
+    name: K8S
+    description: SG for k8s cluster
+    region: "{{region}}"
+    aws_access_key: "{{access_key}}"
+    aws_secret_key: "{{secret_key}}"
+    #inbound rules
+    rules:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+    rules_egress: #outbound rule
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+    state: present
+  register: k8s_sg
+
+- name: Creation of key
+  ec2_key:
+    region: "{{region}}"
+    aws_access_key: "{{access_key}}"
+    aws_secret_key: "{{secret_key}}"
+    name: "{{key_name}}"
+  register: key
+
+- name: save private key
+  copy:
+    content: "{{key.key.private_key}}"
+    dest: "{{key_name}}.pem"
+    mode: 0600
+  #if true then only copy ot dest
+  when: key.changed
+
+- name: Launch ec2 instances
+  ec2:
+    region: "{{region}}"
+    aws_access_key: "{{access_key}}"
+    aws_secret_key: "{{secret_key}}"
+    key_name: "{{key_name}}"
+    instance_type: "{{instance_type}}"
+    image: "{{ami_id}}"
+    group_id: "{{k8s_sg.group_id}}"
+    wait: yes
+    #exact_count: 1
+    #count_tag:
+    # Service: 
+    #  - k8s_master
+    #  - k8s_worker  
+    count: "{{count}}"
+    instance_tags:
+      Name: "{{item.name}}"
+      Service: "{{item.service}}"
+  with_items:
+    - { name: k8s_master1, service: k8s_master }
+    - { name: k8s_worker1, service: k8s_worker }
+    - { name: k8s_worker2, service: k8s_worker }
+    - { name: k8s_worker3, service: k8s_worker }
+#register: k8s_nodes
+
+- name: Refreshing inventory
+  meta: refresh_inventory
+
+- name: halting the play
+  pause: 
+    seconds: 60
+

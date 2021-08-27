@@ -1,0 +1,67 @@
+---
+# tasks file for k8s-deployment
+- include_vars: sqlcred.yml
+#- name: EpelRelease
+#  yum:
+#    name: "https://download-ib01.fedoraproject.org/pub/epel/7/aarch64/Packages/e/epel-release-7-12.noarch.rpm"
+    #    state: present
+
+#- name: Install python 
+#  yum:
+#    name: "{{ pyv }}" 
+#    state: latest
+
+#- name: Installing python-pip
+#  yum:
+#    name: "{{ pipv }}"
+#    state: latest
+
+#- name: Upgrading aws-cli 
+#  pip:
+#    name: awscli
+#   state: latest
+ 
+#- name: Installing openshift
+#  shell: "pip install --ignore-installed openshift"  
+
+#- name: Installing kubernetes module
+#  shell: "pip install --ignore-installed kubernetes"
+   
+- name: "Launch wordpress pod"
+  shell: "kubectl run wp --image=wordpress:5.1.1-php7.3-apache"
+  register: wp
+
+- debug:
+    var: "wp.stdout_lines"
+ 
+- name: "Launching sql pod"
+  shell: "kubectl run sqldb --image=mysql:5.7 --env=MYSQL_ROOT_PASSWORD={{ MYSQL_ROOT_PASS }}     --env=MYSQL_DATABASE={{ MYSQL_DB }}  --env=MYSQL_USER={{ MYSQL_USER }}  --env=MYSQL_PASSWORD={{ MYSQL_PASS }}"
+  register: sql
+
+- name: "Expose wordpress pod"
+  shell: "kubectl expose pods wp  --type=NodePort   --port=80"
+  register: wp_exposed
+  ignore_errors: yes
+ 
+- debug:
+    var: "wp_exposed.stdout_lines"
+
+- name: "SVC"
+  shell: "kubectl get svc"
+  register: svc
+
+- debug: 
+    var: "svc.stdout_lines"
+
+- name: "Halting the playbook for pods to come up"
+  pause:
+    seconds: 60
+
+- name: "Fetching DB IP"
+  shell: "kubectl get pod sqldb -o wide"
+  register: dbip
+
+- debug:
+    var: "dbip.stdout_lines"
+
+           

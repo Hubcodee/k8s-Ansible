@@ -1,0 +1,4 @@
+MYSQL_ROOT_PASS: redhat
+MYSQL_DB: wpdb
+MYSQL_USER: redhat
+MYSQL_PASS: redhat

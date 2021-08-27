@@ -1,0 +1,66 @@
+---
+# tasks file for common_configs
+- selinux:
+    policy: targeted
+    state: permissive
+  ignore_errors: yes
+
+  #- name: Setting up docker repo
+  #yum_repository:
+          #name: docker-ce
+    #description: docker repo
+    #baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+    #gpgcheck: no
+    #enabled: yes
+    #  ignore_errors: yes
+   
+- name : 
+  shell: "rm -rf /etc/yum.repos.d/docker-ce.repo"
+
+- name: Installing docker
+  shell: "yum install docker -y"
+  ignore_errors: yes
+
+- name: Configuring yum repo for k8s
+  yum_repository:
+    name: kubernetes
+    description: Repo for k8s config
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    exclude:
+      - kubectl
+      - kubeadm
+      - kubelet
+
+- name: Installing kubeadm,kubelet,kubectl,iproute-tc
+  yum:
+    name: "{{item}}"
+    disable_excludes: kubernetes
+    state: present
+  loop:
+    - kubeadm
+    - kubelet
+    - kubectl
+    - iproute-tc
+
+- name: Enabling services permanently
+  service:
+    name: "{{item}}"
+    state: started
+    enabled: yes
+  loop:
+    - docker
+    - kubelet
+
+- name: Copy daemon.json file
+  copy:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: Restart docker services
+  service:
+    name: docker
+    state: restarted

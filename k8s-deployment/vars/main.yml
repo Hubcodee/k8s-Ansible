@@ -1,0 +1,8 @@
+---
+# vars file for k8s-deployment
+app: myapp
+namespace: test
+image: vimal13/apache-webserver-php
+pyv: python3
+pipv: python3-pip
+

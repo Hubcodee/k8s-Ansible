@@ -1,0 +1,40 @@
+---
+# tasks file for k8s_master
+- name: Kubernetes Config images pull
+  shell: "kubeadm config images pull" 
+
+- name: Enabling bridge firewall rule
+  shell: "echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables"  
+
+- name: Setting up kubernetes
+  shell: "kubeadm init --pod-network-cidr={{cidr}} --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem"
+  ignore_errors: yes
+ 
+- name: Creating directory 
+  file:
+    name: "$HOME/.kube"
+    state: directory
+
+- name: Copy config files
+  command: "cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"
+
+- name: Owning the file
+  file:
+    path: "$HOME/.kube/config"
+    owner: "root"
+    group: "root"
+
+- name: Droping caches
+  shell: "echo 3 > /proc/sys/vm/drop_caches"
+
+- name: Flannel setup 
+  shell: "kubectl apply  -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+
+- name: Join command
+  shell: "kubeadm token create --print-join-command"
+  register: token
+
+- name: store joining token 
+  local_action: copy content={{ token.stdout  }} dest=/tmp/token
+
+  

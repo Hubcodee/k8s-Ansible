@@ -1,0 +1,43 @@
+---
+# tasks file for terminate-cluster
+- name: Gathering facts about K8s master instances running in "{{ region }}"
+  ec2_instance_facts:
+    aws_access_key : "{{ access_key }}"
+    aws_secret_key : "{{ secret_key }}"  
+    region: "{{ region }}"
+    filters : 
+      "tag:Service" : k8s_master  
+  register: ec2_info_master
+
+- name: Gathering facts about k8s worker instances running in "{{ region }}"
+  ec2_instance_facts:
+    aws_access_key : "{{ access_key }}"
+    aws_secret_key : "{{ secret_key }}"
+    region: "{{ region }}"
+    filters :
+      "tag:Service" : k8s_worker
+  register: ec2_info_worker
+
+
+- name : Terminating k8s master
+  ec2 :
+    aws_access_key : "{{ access_key }}"
+    aws_secret_key : "{{ secret_key }}"
+    instance_ids : "{{ item.instance_id }}"
+    region : "{{ region }}"
+    state : absent
+    wait : yes
+  with_items: "{{ec2_info_master.instances}}"
+
+
+- name : Terminating k8s worker
+  ec2 :
+    aws_access_key : "{{ access_key }}"
+    aws_secret_key : "{{ secret_key }}"
+    instance_ids : "{{ item.instance_id }}"
+    region : "{{ region }}"
+    state : absent
+    wait : yes
+  with_items: "{{ec2_info_worker.instances}}"
+
+
