@@ -1,9 +1,9 @@
 ---
 # tasks file for common_configs
-- selinux:
-    policy: targeted
-    state: permissive
-  ignore_errors: yes
+#- selinux:
+#    policy: targeted
+#    state: permissive
+#  ignore_errors: yes
 
   #- name: Setting up docker repo
   #yum_repository:
@@ -14,8 +14,8 @@
     #enabled: yes
     #  ignore_errors: yes
    
-- name : 
-  shell: "rm -rf /etc/yum.repos.d/docker-ce.repo"
+#- name : 
+#  shell: "rm -rf /etc/yum.repos.d/docker-ce.repo"
 
 - name: Installing docker
   shell: "yum install docker -y"
